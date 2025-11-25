@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroScan AI | Stroke CT Classifier</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #475569;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            grid-column: 1 / -1;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+            color: var(--primary);
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .tagline {
+            font-size: 18px;
+            color: var(--gray-600);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .upload-card {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+
+        .card-description {
+            color: var(--gray-500);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--gray-100);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(37, 99, 235, 0.05);
+        }
+
+        .upload-area.active {
+            border-color: var(--primary);
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+
+        .upload-subtext {
+            color: var(--gray-500);
+            margin-bottom: 16px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 16px;
+            padding: 12px;
+            background-color: var(--gray-100);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .file-size {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background-color: var(--gray-400);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .info-card {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            background-color: var(--gray-100);
+            border-radius: var(--radius);
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            background-color: var(--gray-200);
+            transform: translateX(5px);
+        }
+
+        .info-icon {
+            font-size: 24px;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .info-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+
+        .info-content p {
+            color: var(--gray-500);
+            line-height: 1.6;
+        }
+
+        .result-container {
+            grid-column: 1 / -1;
+            display: none;
+        }
+
+        .result-card {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .result-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .result-icon.normal {
+            color: var(--success);
+        }
+
+        .result-icon.abnormal {
+            color: var(--danger);
+        }
+
+        .result-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .result-description {
+            font-size: 18px;
+            color: var(--gray-500);
+            max-width: 600px;
+            margin: 0 auto 24px;
+            line-height: 1.6;
+        }
+
+        .confidence-meter {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 24px;
+        }
+
+        .confidence-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .confidence-bar {
+            height: 12px;
+            background-color: var(--gray-200);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+
+        .confidence-fill.normal {
+            background-color: var(--success);
+        }
+
+        .confidence-fill.abnormal {
+            background-color: var(--danger);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .btn-secondary {
+            background-color: var(--gray-200);
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--gray-300);
+        }
+
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-card {
+                order: 2;
+            }
+            
+            .upload-card {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-brain logo-icon"></i>
+                <span class="logo-text">NeuroScan AI</span>
+            </div>
+            <p class="tagline">Advanced AI-powered analysis of CT scans for rapid stroke detection</p>
+        </div>
+
+        <div class="card upload-card">
+            <div>
+                <h2 class="card-title">Upload CT Scan</h2>
+                <p class="card-description">Upload a CT scan image to analyze for signs of stroke. Our AI will classify it as Normal or Abnormal.</p>
+            </div>
+
+            <form action="/" method="POST" enctype="multipart/form-data" id="uploadForm">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p class="upload-text">Drag & drop your CT scan here</p>
+                    <p class="upload-subtext">or click to browse files</p>
+                    <p class="upload-subtext">Supports: JPG, PNG, DICOM</p>
+                    <input type="file" name="image" class="file-input" id="fileInput" accept=".jpg,.jpeg,.png,.dcm" required>
+                </div>
+                
+                <div class="file-info" id="fileInfo">
+                    <div class="file-name" id="fileName"></div>
+                    <div class="file-size" id="fileSize"></div>
+                </div>
+                
+                <button type="submit" class="btn btn-full" id="submitBtn">
+                    <i class="fas fa-search"></i>
+                    Analyze CT Scan
+                </button>
+            </form>
+        </div>
+
+        <div class="card info-card">
+            <h2 class="card-title">How It Works</h2>
+            
+            <div class="info-item">
+                <i class="fas fa-upload info-icon"></i>
+                <div class="info-content">
+                    <h3>Upload CT Scan</h3>
+                    <p>Upload a CT scan image in JPG, PNG, or DICOM format for analysis.</p>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <i class="fas fa-brain info-icon"></i>
+                <div class="info-content">
+                    <h3>AI Analysis</h3>
+                    <p>Our deep learning model analyzes the scan for signs of stroke and abnormalities.</p>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <i class="fas fa-chart-line info-icon"></i>
+                <div class="info-content">
+                    <h3>Get Results</h3>
+                    <p>Receive immediate classification with confidence score and detailed analysis.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="card result-card">
+                <i class="fas fa-check-circle result-icon normal" id="resultIcon"></i>
+                <h2 class="result-title" id="resultTitle">Normal CT Scan</h2>
+                <p class="result-description" id="resultDescription">No signs of stroke detected in the CT scan. The brain appears normal with no visible abnormalities.</p>
+                
+                <div class="confidence-meter">
+                    <div class="confidence-label">
+                        <span>Confidence Level</span>
+                        <span id="confidenceValue">92%</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill normal" id="confidenceFill" style="width: 92%"></div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn" id="analyzeAnotherBtn">
+                        <i class="fas fa-redo"></i>
+                        Analyze Another
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>NeuroScan AI &copy; 2023 | For medical professionals. Always consult with a radiologist for final diagnosis.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const submitBtn = document.getElementById('submitBtn');
+            const resultContainer = document.getElementById('resultContainer');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultDescription = document.getElementById('resultDescription');
+            const confidenceValue = document.getElementById('confidenceValue');
+            const confidenceFill = document.getElementById('confidenceFill');
+            const analyzeAnotherBtn = document.getElementById('analyzeAnotherBtn');
+            
+            // Upload area click event
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Drag and drop events
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('active');
+            });
+            
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.classList.remove('active');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('active');
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileSelection();
+                }
+            });
+            
+            // File input change event
+            fileInput.addEventListener('change', handleFileSelection);
+            
+            function handleFileSelection() {
+                if (fileInput.files.length) {
+                    const file = fileInput.files[0];
+                    fileName.textContent = file.name;
+                    fileSize.textContent = formatFileSize(file.size);
+                    fileInfo.style.display = 'block';
+                }
+            }
+            
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            // Analyze another button
+            analyzeAnotherBtn.addEventListener('click', function() {
+                resultContainer.style.display = 'none';
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+            });
+            
+            // Form submission - let Flask handle it naturally
+            document.getElementById('uploadForm').addEventListener('submit', function(e) {
+                // Don't preventDefault - let form submit normally
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            });
+            
+            // Check if there's a prediction result from the backend
+            const prediction = "{{ prediction }}";
+            
+            if (prediction && prediction.trim()) {
+                showResult(prediction);
+                // Re-enable button after showing results
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-search"></i> Analyze CT Scan';
+            }
+            
+            function showResult(prediction) {
+                console.log("Prediction received:", prediction); // Debug log
+                
+                // Extract confidence value from prediction string
+                // Format: "Normal — Confidence: 0.9234" or "Abnormal (Stroke) — Confidence: 0.7845"
+                let confidence = 0;
+                let confidencePercent = 0;
+                
+                const confMatch = prediction.match(/Confidence:\s*([\d.]+)/);
+                if (confMatch) {
+                    confidence = parseFloat(confMatch[1]);
+                    confidencePercent = Math.round(confidence * 100);
+                } else {
+                    confidencePercent = 85; // fallback
+                }
+                
+                const isNormal = prediction.toLowerCase().includes('normal') && 
+                                !prediction.toLowerCase().includes('abnormal');
+                
+                if (isNormal) {
+                    resultIcon.className = 'fas fa-check-circle result-icon normal';
+                    resultTitle.textContent = 'Normal CT Scan';
+                    resultDescription.textContent = 'No signs of stroke detected in the CT scan. The brain appears normal with no visible abnormalities.';
+                    confidenceFill.className = 'confidence-fill normal';
+                } else {
+                    resultIcon.className = 'fas fa-exclamation-triangle result-icon abnormal';
+                    resultTitle.textContent = 'Abnormal CT Scan - Stroke Detected';
+                    resultDescription.textContent = 'Potential signs of stroke detected in the CT scan. Please consult with a radiologist for further evaluation.';
+                    confidenceFill.className = 'confidence-fill abnormal';
+                }
+                
+                // Update confidence display with ACTUAL value
+                confidenceValue.textContent = confidencePercent + '%';
+                confidenceFill.style.width = confidencePercent + '%';
+                
+                resultContainer.style.display = 'block';
+                
+                // Scroll to results
+                resultContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>
